@@ -1,0 +1,13 @@
+@hostname = localhost
+@port = 3000
+@host = {{hostname}}:{{port}}
+@path = http://{{host}}/
+
+POST {{path}}create-payment-intent
+content-type: application/json
+
+{
+  "amount": 295,
+  "currency": "eur"
+}
+
