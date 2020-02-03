@@ -3,6 +3,31 @@
 @host = {{hostname}}:{{port}}
 @path = http://{{host}}/
 
+GET {{path}}card-wallet
+###
+POST {{path}}create-customer
+content-type: application/json
+
+{
+  "name": "Ilkka Salmenius",
+  "email": "ilkka.salmenius@gmail.com",
+  "phone": "050 61698",
+  "number": "4242 4242 4242 4242"
+}
+###
+POST {{path}}create-payment-method
+content-type: application/json
+
+{
+  "name": "Ilkka Salmenius",
+  "email": "ilkka.salmenius@gmail.com",
+  "phone": "050 61698",
+  "number": "4242 4242 4242 4242",
+  "expMonth": 12,
+  "expYear": 22,
+  "cvc": "123"
+}
+###
 POST {{path}}create-payment-intent
 content-type: application/json
 
