@@ -53,25 +53,17 @@ app.post('/payment-method/add', async (req, res) => {
 app.delete('/payment-method/remove/:customerId', async (req, res) => {
   const customerId = req.params.customerId;
 
-  const customer = await stripe.customers.create({
-    name,
-    email,
-    phone,
-    payment_method: setupIntent.payment_method
-  });
+  await stripe.customers.del(customerId);
 
-  console.log(`Customer ${customerId} removed`);
+  console.log(`Customer ${customerId} deleted`);
 
   res.send({
-    customer
+    customerId
   });
 });
 
 app.post('/payment-method/charge/:customerId', async (req, res) => {
   const customer = req.params.customerId;
-
-  const amount = req.body.amount;
-  const currency = req.body.currency;
 
   const paymentMethods = await stripe.paymentMethods.list({
     customer,
@@ -81,10 +73,15 @@ app.post('/payment-method/charge/:customerId', async (req, res) => {
   if (paymentMethods.data.length > 0) {
     const payment_method = paymentMethods.data[0].id;
 
+    const amount = req.body.amount;
+    const currency = req.body.currency;
+    const capture_method = req.body.capture_method;
+
     try {
       const payment_intent = await stripe.paymentIntents.create({
         amount,
         currency,
+        capture_method,
         customer,
         payment_method,
         off_session: true,
@@ -96,7 +93,9 @@ app.post('/payment-method/charge/:customerId', async (req, res) => {
       });
     } catch (err) {
       // Error code will be authentication_required if authentication is needed
-      console.log('Error code is: ', err.code);
+      const message = 'Error: ' + err.code;
+      console.log(message);
+      res.status(500).send(message);
 
       if (err.raw.payment_intent) {
         const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
@@ -106,19 +105,13 @@ app.post('/payment-method/charge/:customerId', async (req, res) => {
   }
 });
 
-
-app.post('/create-payment-intent', async (req, res) => {
-  const amount = req.body.amount;
-  const currency = req.body.currency;
+app.post('/payment/capture/:id', async (req, res) => {
+  const id = req.params.id;
   
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount,
-    currency,
-  });
+  const payment_intent = await stripe.paymentIntents.capture(id);
 
   res.send({
-    publishableKey,
-    clientSecret: paymentIntent.client_secret
+    payment_intent
   });
 });
 
