@@ -67,7 +67,7 @@ export default {
         capture_method: this.paymentIntent.captureMethod
       }
 
-      axios.post(this.host + '/payment-method/charge/' + this.customer.customerId, data)
+      axios.post(this.host + '/payment/create-by-first-customer-method/' + this.customer.customerId, data)
         .then(response => {
           console.log(response.data.payment_intent);
           this.paymentIntent.paymentId = response.data.payment_intent.id;

@@ -1,15 +1,20 @@
+const secretKey = 'sk_test_hA7iiYgRGu50SqpvjXKBoSaS00IWhjTYrp';
+const publishableKey = 'pk_test_HwIJnmPtdGVutsLWw6LZfxiV00POcWLBUN';
+
 const cors = require('cors')
 const express = require('express')
-const stripe = require('stripe')('sk_test_hA7iiYgRGu50SqpvjXKBoSaS00IWhjTYrp');
+const stripe = require('stripe')(secretKey);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const publishableKey = 'pk_test_HwIJnmPtdGVutsLWw6LZfxiV00POcWLBUN';
 
+//
+// Setup
+//
 
-app.get('/card-setup', async (req, res) => {
+app.get('/setup', async (req, res) => {
   try {
     const setupIntent =  await stripe.setupIntents.create();
 
@@ -23,9 +28,54 @@ app.get('/card-setup', async (req, res) => {
   }
 });
 
+
+//
+// Customer
+//
+
+app.post('/customer/create', async (req, res) => {
+  const data = {
+    name: req.body.name,
+    email: req.body.email,
+    phone: req.body.phone
+  }
+
+  try {
+    const customer = await stripe.customers.create(data);
+    console.log(`Customer ${customer.id} created`);
+
+    res.send({
+      customer
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(400).send({ code: err.code, message: err.message });
+  }
+});
+
+app.delete('/customer/delete/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await stripe.customers.del(id);
+    console.log(`Customer ${id} deleted`);
+  
+    res.send({
+      id
+    });
+  } catch(err) {
+    console.error(err.message);
+    res.status(400).send({ code: err.code, message: err.message });
+  }
+});
+
+
+//
+// Payment method
+//
+
 app.get('/payment-methods/:customerId', async (req, res) => {
   const customerId = req.params.customerId;
-  console.log('customerId', customerId);
 
   try {
     const paymentMethods = await stripe.paymentMethods.list({
@@ -40,24 +90,23 @@ app.get('/payment-methods/:customerId', async (req, res) => {
   }
 });
 
-app.post('/payment-method/add', async (req, res) => {
-  const name = req.body.name;
-  const email = req.body.email;
-  const phone = req.body.phone;
-  const setupIntent = req.body.setupIntent;
+app.post('/payment-method/attach', async (req, res) => {
+  const paymentMethodId = req.body.paymentMethodId;
+  const customerId = req.body.customerId;
 
   try {
-    const customer = await stripe.customers.create({
-      name,
-      email,
-      phone,
-      payment_method: setupIntent.payment_method
-    });
+    await stripe.paymentMethods.attach(
+      paymentMethodId,
+      {
+        customer: customerId
+      }
+    );
   
-    console.log(`Customer ${customer.id} with Payment method ${setupIntent.payment_method} added`);
+    console.log(`Payment method ${paymentMethodId} attached to customer ${customerId}`);
   
     res.send({
-      customer
+      paymentMethodId,
+      customerId
     });
   } catch (err) {
     console.error(err.message);
@@ -65,24 +114,12 @@ app.post('/payment-method/add', async (req, res) => {
   }
 });
 
-app.delete('/payment-method/remove/:customerId', async (req, res) => {
-  const customerId = req.params.customerId;
 
-  try {
-    await stripe.customers.del(customerId);
+//
+// Payment
+//
 
-    console.log(`Customer ${customerId} deleted`);
-  
-    res.send({
-      customerId
-    });
-  } catch(err) {
-    console.error(err.message);
-    res.status(400).send({ code: err.code, message: err.message });
-  }
-});
-
-app.post('/payment-method/charge/:customerId', async (req, res) => {
+app.post('/payment/create-by-first-customer-method/:customerId', async (req, res) => {
   const customer = req.params.customerId;
 
   const paymentMethods = await stripe.paymentMethods.list({
@@ -108,6 +145,8 @@ app.post('/payment-method/charge/:customerId', async (req, res) => {
         confirm: true
       });
 
+      console.log(`Payment intent ${payment_intent.id} created`);
+
       res.send({
         payment_intent
       });
@@ -129,6 +168,8 @@ app.post('/payment/capture/:id', async (req, res) => {
 
   try {
     const payment_intent = await stripe.paymentIntents.capture(id);
+
+    console.log(`Payment intent ${payment_intent.id} captured`);
 
     res.send({
       payment_intent
