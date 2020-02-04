@@ -1,17 +1,17 @@
 <template>
   <div id="app">
     <h1>Stripe Payment</h1>
-    <Customer />
+    <Payment />
   </div>
 </template>
 
 <script>
-import Customer from './components/Customer.vue'
+import Payment from './components/Payment.vue'
 
 export default {
   name: 'app',
   components: {
-    Customer
+    Payment
   }
 }
 </script>

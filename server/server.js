@@ -9,7 +9,7 @@ app.use(express.json());
 const publishableKey = 'pk_test_HwIJnmPtdGVutsLWw6LZfxiV00POcWLBUN';
 
 
-app.get('/card-wallet', async (req, res) => {
+app.get('/card-setup', async (req, res) => {
   try {
     const setupIntent =  await stripe.setupIntents.create();
 
