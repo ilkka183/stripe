@@ -2,7 +2,6 @@
   <div>
     <div class="group">
       <table>
-        <tr><td>Customer:</td><td><code>{{ customer.id }}</code></td></tr>
         <tr><td>Name:</td><td><input type="text" size="40" v-model="customer.name"></td></tr>
         <tr><td>Email:</td><td><input type="text" size="40" v-model="customer.email"></td></tr>
         <tr><td>Phone:</td><td><input type="text" size="40" v-model="customer.phone"></td></tr>
@@ -12,23 +11,30 @@
     </div>
     <div v-show="customer.id" class="group">
       <table>
+        <tr><td>Customer:</td><td><code>{{ customer.id }}</code></td></tr>
         <tr><td>Payment Method:</td><td><code>{{ paymentMethod.id }}</code></td></tr>
         <tr><td>Amount:</td><td><input type="text" v-model="paymentIntent.amount"></td></tr>
         <tr><td>Currency:</td><td><input type="text" v-model="paymentIntent.currency"></td></tr>
         <tr><td>Capture method:</td><td><input type="text" v-model="paymentIntent.captureMethod"></td></tr>
       </table>
-      <div class="row"><button class="button" :disabled="!customer.id" @click="chargePaymentMethod">Charge Card</button></div>
-      <div class="row"><button class="button" :disabled="!paymentIntent.id" @click="capturePaymentMethod">Capture Card</button></div>
+      <div class="row">
+        <button class="button" :disabled="!customer.id || paymentIntent.captureNeeded" @click="createPaymentMethod">Create Payment</button>
+        <button v-if="paymentIntent.captureNeeded" class="button" @click="capturePaymentMethod">Capture Payment</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import CardSetup from './CardSetup.vue'
 
 const host = 'http://localhost:3000';
 
 export default {
+  components: {
+    CardSetup
+  },
   data() {
     return {
       customer: {
@@ -45,10 +51,11 @@ export default {
         amount: 195,
         currency: 'eur',
         captureMethod: 'automatic',
+        captureNeeded: false
       },
       stripe: null,
-      cardElement: null,
       clientSecret: null,
+      cardElement: null,
       loading: true
     }
   },
@@ -70,9 +77,6 @@ export default {
             color: "#32325d",
             fontSize: '20px',
           },
-
-          invalid: {
-          }
         };      
 
         this.cardElement = elements.create('card', { style });
@@ -109,9 +113,9 @@ export default {
       this.paymentMethod.id = setupIntent.payment_method;
 
       const data = {
-        name: 'Ilkka Salmenius',
-        email: 'ilkka.salmenius@gmail.com',
-        phone: '050 61698',
+        name: this.customer.name,
+        email: this.customer.email,
+        phone: this.customer.phone,
         setupIntent
       }
 
@@ -121,27 +125,29 @@ export default {
           this.customer.id = response.data.customer.id;
         })
     },
-    chargePaymentMethod() {
+    createPaymentMethod() {
       const data = {
         customerId: this.customer.id,
-        amount: this.payment.amount,
-        currency: this.payment.currency,
-        capture_method: this.payment.captureMethod
+        amount: this.paymentIntent.amount,
+        currency: this.paymentIntent.currency,
+        capture_method: this.paymentIntent.captureMethod
       }
 
       axios.post(host + '/payment-method/charge/' + this.customer.id, data)
         .then(response => {
           console.log(response.data.payment_intent);
           this.paymentIntent.id = response.data.payment_intent.id;
+          this.paymentIntent.captureNeeded = this.paymentIntent.captureMethod == 'manual';
         })
         .catch(error => {
           console.log(error.response);
         });
     },
     capturePaymentMethod() {
-      axios.post(host + '/payment/capture/' + this.payment.id)
+      axios.post(host + '/payment/capture/' + this.paymentIntent.id)
         .then(response => {
           console.log(response.data.payment_intent);
+          this.paymentIntent.captureNeeded = false;
         })
         .catch(error => {
           console.log(error.response);
