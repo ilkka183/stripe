@@ -168,8 +168,23 @@ app.post('/payment/capture/:id', async (req, res) => {
 
   try {
     const payment_intent = await stripe.paymentIntents.capture(id);
-
     console.log(`Payment intent ${payment_intent.id} captured`);
+
+    res.send({
+      payment_intent
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(400).send({ code: err.code, message: err.message });
+  }
+});
+
+app.post('/payment/cancel/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const payment_intent = await stripe.paymentIntents.cancel(id);
+    console.log(`Payment intent ${payment_intent.id} cancelled`);
 
     res.send({
       payment_intent

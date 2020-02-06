@@ -2,6 +2,7 @@
   <div>
     <div ref="cardElement"></div>
     <button class="button" :disabled="processing" @click="saveCard">Save Card</button>
+    <div class="error">{{errorMessage}}</div>
   </div>
 </template>
 
@@ -20,13 +21,16 @@ export default {
       stripe: null,
       clientSecret: null,
       cardElement: null,
-      processing: true
+      processing: true,
+      errorMessage: null
     }
   },
   mounted() {
+    this.beginWait();
+
     axios.get(this.host + '/setup')
       .then(response => {
-        this.processing = false;
+        this.endWait();
         console.log(response.data);
 
         this.clientSecret = response.data.client_secret;
@@ -58,7 +62,7 @@ export default {
   },
   methods: {
     saveCard() {
-      this.processing = true;
+      this.beginWait();
 
       this.stripe.confirmCardSetup(
         this.clientSecret,
@@ -73,8 +77,8 @@ export default {
       .then(result => {
         if (result.error) {
           window.console.log(result.error);
-          this.showError(result.error.message);
-          this.processing = false;
+          this.setupError(result.error.message);
+          this.endWait();
         } else {
           window.console.log(result);
           this.createCustomer(result.setupIntent);
@@ -92,6 +96,10 @@ export default {
         .then(response => {
           console.log(response.data.customer);
           this.attachPaymentMethodTo(setupIntent.payment_method, response.data.customer.id);
+        })
+        .catch(error => {
+          console.log(error.response);
+          setupError(error.response.data.message);
         });
     },
     attachPaymentMethodTo(paymentMethodId, customerId) {
@@ -109,9 +117,24 @@ export default {
 
           console.log(data);
           this.$emit('setup', data);
-          this.processing = false;
+          this.endWait();
         })
+        .catch(error => {
+          console.log(error.response);
+          setupError(error.response.data.message);
+        });
     },
+    beginWait() {
+      this.processing = true;
+      this.errorMessage = '';
+    },
+    endWait() {
+      this.processing = false;
+    },
+    setupError(message) {
+      this.errorMessage = message;
+      this.processing = false;
+    }
   }
 }
 </script>
@@ -147,5 +170,15 @@ export default {
 
 .StripeElement--webkit-autofill {
   background-color: #fefde5 !important;
+}
+
+.success {
+  margin-top: 10px;
+  color: green;
+}
+
+.error {
+  margin-top: 10px;
+  color: red;
 }
 </style>
