@@ -10,13 +10,15 @@ import StripeComponent from './StripeComponent'
 
 export default {
   extends: StripeComponent,
+  props: {
+    client: { type: Object }
+  },
   data() {
     return {
       stripe: null,
       clientSecret: null,
       elements: [],
-      processing: true,
-      errorMessage: null
+      processing: true
     }
   },
   mounted() {
@@ -67,15 +69,10 @@ export default {
     },
     beginWait() {
       this.processing = true;
-      this.errorMessage = '';
     },
     endWait() {
       this.processing = false;
     },
-    setupError(message) {
-      this.errorMessage = message;
-      this.processing = false;
-    }
   }
 }
 </script>
@@ -112,10 +109,5 @@ export default {
 
 .StripeElement--webkit-autofill {
   background-color: #fefde5 !important;
-}
-
-.error {
-  margin-top: 10px;
-  color: red;
 }
 </style>

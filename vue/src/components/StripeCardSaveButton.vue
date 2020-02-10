@@ -8,6 +8,11 @@ import StripeComponent from './StripeComponent'
 
 export default {
   extends: StripeComponent,
+  props: {
+    name: { type: String },
+    email: { type: String },
+    phone: { type: String }
+  },
   computed: {
     setupElement() {
       if (this.$parent.elements.length > 0)
@@ -33,7 +38,7 @@ export default {
       .then(result => {
         if (result.error) {
           window.console.log(result.error);
-          this.$parent.setupError(result.error.message);
+          this.$emit('error', result.error.message);
           this.$parent.endWait();
         } else {
           window.console.log(result);
@@ -43,9 +48,9 @@ export default {
     },
     createCustomer(setupIntent) {
       const data = {
-        name: this.$parent.client.name,
-        email: this.$parent.client.email,
-        phone: this.$parent.client.phone
+        name: this.name,
+        email: this.email,
+        phone: this.phone
       }
 
       axios.post(this.$parent.client.host + '/customer/create', data)
@@ -55,7 +60,7 @@ export default {
         })
         .catch(error => {
           console.log(error.response);
-          this.$parent.setupError(error.response.data.message);
+          this.$emit('error', error.response.data.message);
         });
     },
     attachPaymentMethodTo(paymentMethodId, customerId) {
@@ -72,14 +77,13 @@ export default {
           }
 
           console.log(data);
-          this.client.customerId = data.customerId;
-          this.client.paymentMethodId = data.paymentMethodId;
-
+          this.$emit('saved', data);
           this.$parent.endWait();
         })
         .catch(error => {
           console.log(error.response);
-          this.$parent.setupError(error.response.data.message);
+          this.$emit('error', error.response.data.message);
+          this.$parent.endWait();
         });
     },
   }
