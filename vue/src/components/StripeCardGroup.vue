@@ -6,12 +6,10 @@
 
 <script>
 import axios from 'axios';
-import StripeComponent from './StripeComponent'
 
 export default {
-  extends: StripeComponent,
   props: {
-    client: { type: Object }
+    host: { type: String, required: true }
   },
   data() {
     return {
@@ -24,11 +22,10 @@ export default {
   mounted() {
     this.beginWait();
 
-    axios.get(this.client.host + '/setup')
+    axios.get(this.host + '/setup')
       .then(response => {
         this.endWait();
         console.log(response.data);
-
         this.clientSecret = response.data.client_secret;
 
         /* eslint-disable */

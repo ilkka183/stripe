@@ -3,14 +3,14 @@
 </template>
 
 <script>
+import StripeCardBaseElement from './StripeCardBaseElement';
+
 export default {
+  extends: StripeCardBaseElement,
   computed: {
     elementName() {
       return 'cardNumber';
     }
-  },
-  mounted() {
-    this.$parent.elementMounted(this);
   }
 }
 </script>

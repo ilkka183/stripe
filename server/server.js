@@ -14,9 +14,9 @@ app.use(express.json());
 // Setup
 //
 
-app.get('/setup', async (req, res) => {
+app.get('/stripe/setup', async (req, res) => {
   try {
-    const setupIntent =  await stripe.setupIntents.create();
+    const setupIntent = await stripe.setupIntents.create();
 
     res.send({
       publishableKey,
@@ -33,7 +33,7 @@ app.get('/setup', async (req, res) => {
 // Customer
 //
 
-app.post('/customer/create', async (req, res) => {
+app.post('/stripe/customer/create', async (req, res) => {
   const data = {
     name: req.body.name,
     email: req.body.email,
@@ -53,7 +53,7 @@ app.post('/customer/create', async (req, res) => {
   }
 });
 
-app.delete('/customer/delete/:id', async (req, res) => {
+app.delete('/stripe/customer/delete/:id', async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -74,7 +74,7 @@ app.delete('/customer/delete/:id', async (req, res) => {
 // Payment method
 //
 
-app.get('/payment-methods/:customerId', async (req, res) => {
+app.get('/stripe/payment-methods/:customerId', async (req, res) => {
   const customerId = req.params.customerId;
 
   try {
@@ -90,7 +90,7 @@ app.get('/payment-methods/:customerId', async (req, res) => {
   }
 });
 
-app.post('/payment-method/attach', async (req, res) => {
+app.post('/stripe/payment-method/attach', async (req, res) => {
   const paymentMethodId = req.body.paymentMethodId;
   const customerId = req.body.customerId;
 
@@ -119,7 +119,7 @@ app.post('/payment-method/attach', async (req, res) => {
 // Payment
 //
 
-app.post('/payment/create-by-first-customer-method/:customerId', async (req, res) => {
+app.post('/stripe/payment/create-by-first-customer-method/:customerId', async (req, res) => {
   const customer = req.params.customerId;
 
   const paymentMethods = await stripe.paymentMethods.list({
@@ -163,7 +163,7 @@ app.post('/payment/create-by-first-customer-method/:customerId', async (req, res
   }
 });
 
-app.post('/payment/capture/:id', async (req, res) => {
+app.post('/stripe/payment/capture/:id', async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -179,7 +179,7 @@ app.post('/payment/capture/:id', async (req, res) => {
   }
 });
 
-app.post('/payment/cancel/:id', async (req, res) => {
+app.post('/stripe/payment/cancel/:id', async (req, res) => {
   const id = req.params.id;
 
   try {

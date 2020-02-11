@@ -7,7 +7,7 @@
         <tr><td>Email:</td><td><input type="text" size="60" v-model="email"></td></tr>
         <tr><td>Phone:</td><td><input type="text" size="20" v-model="phone"></td></tr>
       </table>
-      <StripeCardGroup :client="client">
+      <StripeCardGroup :host="host">
         <div v-if="single">
           <StripeCardElement />
         </div>
@@ -55,15 +55,15 @@
         </template>
       </div>
       <div vlass="messages">
-        <div v-if="client" class="success">{{ client.success }}</div>
-        <div v-if="client" class="error">{{ paymentErrorMessage }}</div>
+        <div class="success">{{ paymentSuccessMessage }}</div>
+        <div class="error">{{ paymentErrorMessage }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import StripeClient from './stripe-client.js'
+import axios from 'axios';
 import StripeCardGroup from './StripeCardGroup'
 import StripeCardElement from './StripeCardElement'
 import StripeCardNumberElement from './StripeCardNumberElement'
@@ -82,26 +82,23 @@ export default {
   },
   data() {
     return {
-      client: new StripeClient("http://localhost:3000"),
-      single: true,
+      host: 'http://localhost:3000/stripe',
       name: 'Ilkka Salmenius',
       email: 'ilkka.salmennius@gmail.com',
       phone: '050 61698',
+      single: true,
       customerId: null,
       paymentMethodId: null,
       cardErrorMessage: null,
       paymentId: null,
+      paymentSuccessMessage: null,
       paymentErrorMessage: null,
       amount: 195,
       currency: 'eur',
       captureMethod: 'automatic',
-      captureNeeded: false
+      captureNeeded: false,
+      processing: false
     }
-  },
-  computed: {
-    processing() {
-      return this.client && this.client.processing;
-    },
   },
   methods: {
     cardSaved(data) {
@@ -111,30 +108,60 @@ export default {
     cardError(errorMessage) {
       this.cardErrorMessage = errorMessage;
     },
-    async createPayment() {
-      try {
-        this.paymentId = await this.client.createPayment(this.customerId, this.amount, this.currency, this.captureMethod);
-        this.captureNeeded = this.captureMethod == 'manual';
-      } catch(error) {
-        this.paymentErrorMessage = error.response.data.message;
+    createPayment() {
+      this.beginWait();
+
+      const data = {
+        customerId: this.customerId,
+        amount: this.amount,
+        currency: this.currency,
+        capture_method: this.captureMethod
       }
+
+      axios.post(this.host + '/payment/create-by-first-customer-method/' + this.customerId, data)
+        .then(response => {
+          console.log(response.data.payment_intent);
+          this.paymentId = response.data.payment_intent.id;
+          this.captureNeeded = this.captureMethod == 'manual';
+          this.endWait();
+        })
+        .catch(error => this.paymentError(error));
     },
-    async capturePayment() {
-      try {
-        await this.client.capturePayment(this.paymentId);
-        this.captureNeeded = false;
-      } catch(error) {
-        this.paymentErrorMessage = error.response.data.message;
-      }
+    capturePayment() {
+      this.beginWait();
+
+      axios.post(this.host + '/payment/capture/' + this.paymentId)
+        .then(response => {
+          console.log(response.data.payment_intent);
+          this.captureNeeded = false;
+          this.endWait();
+        })
+        .catch(error => this.paymentError(error));
     },
-    async cancelPayment() {
-      try {
-        await this.client.cancelPayment(this.paymentId);
-        this.captureNeeded = false;
-      } catch(error) {
-        this.paymentErrorMessage = error.response.data.message;
-      }
-    }
+    cancelPayment() {
+      this.beginWait();
+
+      axios.post(this.host + '/payment/cancel/' + this.paymentId)
+        .then(response => {
+          console.log(response.data.payment_intent);
+          this.captureNeeded = false;
+          this.endWait();
+        })
+        .catch(error => this.paymentError(error));
+    },
+    beginWait() {
+      this.paymentSuccessMessage = '';
+      this.paymentErrorMessage = '';
+      this.processing = true;
+    },
+    endWait() {
+      this.paymentSuccessMessage = 'Succeeded';
+      this.processing = false;
+    },
+    paymentError(error) {
+      this.paymentErrorMessage = error.response.data.message;
+      this.processing = false;
+    },
   }
 }
 </script>

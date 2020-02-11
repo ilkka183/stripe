@@ -4,10 +4,8 @@
 
 <script>
 import axios from 'axios';
-import StripeComponent from './StripeComponent'
 
 export default {
-  extends: StripeComponent,
   props: {
     name: { type: String },
     email: { type: String },
@@ -31,7 +29,7 @@ export default {
           payment_method: {
             card: this.setupElement,
             billing_details: {
-              name: this.$parent.client.name,
+              name: this.name,
             },
           },
       })
@@ -53,7 +51,7 @@ export default {
         phone: this.phone
       }
 
-      axios.post(this.$parent.client.host + '/customer/create', data)
+      axios.post(this.$parent.host + '/customer/create', data)
         .then(response => {
           console.log(response.data.customer);
           this.attachPaymentMethodTo(setupIntent.payment_method, response.data.customer.id);
@@ -69,7 +67,7 @@ export default {
         customerId,
       }
 
-      axios.post(this.$parent.client.host + '/payment-method/attach', data)
+      axios.post(this.$parent.host + '/payment-method/attach', data)
         .then(response => {
           const data = {
             paymentMethodId: response.data.paymentMethodId,
