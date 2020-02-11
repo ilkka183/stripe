@@ -20,7 +20,7 @@ app.get('/stripe/setup', async (req, res) => {
 
     res.send({
       publishableKey,
-      client_secret: setupIntent.client_secret 
+      setupIntent
     });
   } catch (err) {
     console.error(err.message);
@@ -44,9 +44,7 @@ app.post('/stripe/customer/create', async (req, res) => {
     const customer = await stripe.customers.create(data);
     console.log(`Customer ${customer.id} created`);
 
-    res.send({
-      customer
-    });
+    res.send(customer);
   } catch (err) {
     console.error(err.message);
     res.status(400).send({ code: err.code, message: err.message });
@@ -95,7 +93,7 @@ app.post('/stripe/payment-method/attach', async (req, res) => {
   const customerId = req.body.customerId;
 
   try {
-    await stripe.paymentMethods.attach(
+    const response = await stripe.paymentMethods.attach(
       paymentMethodId,
       {
         customer: customerId
@@ -104,10 +102,7 @@ app.post('/stripe/payment-method/attach', async (req, res) => {
   
     console.log(`Payment method ${paymentMethodId} attached to customer ${customerId}`);
   
-    res.send({
-      paymentMethodId,
-      customerId
-    });
+    res.send(response);
   } catch (err) {
     console.error(err.message);
     res.status(400).send({ code: err.code, message: err.message });
@@ -147,9 +142,7 @@ app.post('/stripe/payment/create-by-first-customer-method/:customerId', async (r
 
       console.log(`Payment intent ${payment_intent.id} created`);
 
-      res.send({
-        payment_intent
-      });
+      res.send(payment_intent);
     } catch (err) {
       // Error code will be authentication_required if authentication is needed
       console.error(err.message);
@@ -170,9 +163,7 @@ app.post('/stripe/payment/capture/:id', async (req, res) => {
     const payment_intent = await stripe.paymentIntents.capture(id);
     console.log(`Payment intent ${payment_intent.id} captured`);
 
-    res.send({
-      payment_intent
-    });
+    res.send(payment_intent);
   } catch (err) {
     console.error(err.message);
     res.status(400).send({ code: err.code, message: err.message });
@@ -186,9 +177,7 @@ app.post('/stripe/payment/cancel/:id', async (req, res) => {
     const payment_intent = await stripe.paymentIntents.cancel(id);
     console.log(`Payment intent ${payment_intent.id} cancelled`);
 
-    res.send({
-      payment_intent
-    });
+    res.send(payment_intent);
   } catch (err) {
     console.error(err.message);
     res.status(400).send({ code: err.code, message: err.message });

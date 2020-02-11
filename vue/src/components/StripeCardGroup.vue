@@ -26,7 +26,7 @@ export default {
       .then(response => {
         this.endWait();
         console.log(response.data);
-        this.clientSecret = response.data.client_secret;
+        this.clientSecret = response.data.setupIntent.client_secret;
 
         /* eslint-disable */
         this.stripe = Stripe(response.data.publishableKey);

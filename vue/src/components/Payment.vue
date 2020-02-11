@@ -83,6 +83,7 @@ export default {
   data() {
     return {
       host: 'http://localhost:3000/stripe',
+//      host: 'http://localhost:49363/wp-json/juro/v1/stripe',
       name: 'Ilkka Salmenius',
       email: 'ilkka.salmennius@gmail.com',
       phone: '050 61698',
@@ -120,8 +121,8 @@ export default {
 
       axios.post(this.host + '/payment/create-by-first-customer-method/' + this.customerId, data)
         .then(response => {
-          console.log(response.data.payment_intent);
-          this.paymentId = response.data.payment_intent.id;
+          console.log(response.data);
+          this.paymentId = response.data.id;
           this.captureNeeded = this.captureMethod == 'manual';
           this.endWait();
         })
@@ -132,7 +133,7 @@ export default {
 
       axios.post(this.host + '/payment/capture/' + this.paymentId)
         .then(response => {
-          console.log(response.data.payment_intent);
+          console.log(response.data);
           this.captureNeeded = false;
           this.endWait();
         })
@@ -143,7 +144,7 @@ export default {
 
       axios.post(this.host + '/payment/cancel/' + this.paymentId)
         .then(response => {
-          console.log(response.data.payment_intent);
+          console.log(response.data);
           this.captureNeeded = false;
           this.endWait();
         })

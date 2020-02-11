@@ -53,8 +53,8 @@ export default {
 
       axios.post(this.$parent.host + '/customer/create', data)
         .then(response => {
-          console.log(response.data.customer);
-          this.attachPaymentMethodTo(setupIntent.payment_method, response.data.customer.id);
+          console.log(response.data);
+          this.attachPaymentMethodTo(setupIntent.payment_method, response.data.id);
         })
         .catch(error => {
           console.log(error.response);
@@ -69,12 +69,13 @@ export default {
 
       axios.post(this.$parent.host + '/payment-method/attach', data)
         .then(response => {
+          console.log(response.data);
+
           const data = {
-            paymentMethodId: response.data.paymentMethodId,
-            customerId: response.data.customerId
+            paymentMethodId: response.data.id,
+            customerId: response.data.customer
           }
 
-          console.log(data);
           this.$emit('saved', data);
           this.$parent.endWait();
         })
