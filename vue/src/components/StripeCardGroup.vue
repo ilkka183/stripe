@@ -8,6 +8,7 @@
 import axios from 'axios';
 
 export default {
+  name: 'StripeCardGroup',
   props: {
     host: { type: String, required: true }
   },

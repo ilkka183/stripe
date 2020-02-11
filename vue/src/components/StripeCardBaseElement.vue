@@ -1,7 +1,10 @@
 <script>
+import StripeCardComponent from './StripeCardComponent';
+
 export default {
+  extends: StripeCardComponent,
   mounted() {
-    this.$parent.elementMounted(this);
+    this.group.elementMounted(this);
   }
 }
 </script>

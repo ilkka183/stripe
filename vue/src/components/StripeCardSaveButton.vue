@@ -1,35 +1,31 @@
 <template>
-  <button class="button submit" :disabled="$parent.processing" @click="saveCard"><slot></slot></button>
+  <button class="button submit" :disabled="processing" @click="saveCard"><slot></slot></button>
 </template>
 
 <script>
 import axios from 'axios';
+import StripeCardButton from './StripeCardButton';
 
 export default {
+  extends: StripeCardButton,
   props: {
     name: { type: String },
     email: { type: String },
     phone: { type: String }
   },
-  computed: {
-    setupElement() {
-      if (this.$parent.elements.length > 0)
-        return this.$parent.elements[0].element;
-
-      return null;
-    }
-  },
   methods: {
     saveCard() {
-      this.$parent.beginWait();
+      this.beginWait();
 
-      this.$parent.stripe.confirmCardSetup(
-        this.$parent.clientSecret,
+      this.stripe.confirmCardSetup(
+        this.group.clientSecret,
         {
           payment_method: {
-            card: this.setupElement,
+            card: this.cardElement,
             billing_details: {
+              email: this.email,
               name: this.name,
+              phone: this.phone,
             },
           },
       })
@@ -37,9 +33,9 @@ export default {
         if (result.error) {
           window.console.log(result.error);
           this.$emit('error', result.error.message);
-          this.$parent.endWait();
+          this.endWait();
         } else {
-          window.console.log(result);
+          window.console.log(result.setupIntent);
           this.createCustomer(result.setupIntent);
         }
       });
@@ -51,7 +47,7 @@ export default {
         phone: this.phone
       }
 
-      axios.post(this.$parent.host + '/customer/create', data)
+      axios.post(this.host + '/customer/create', data)
         .then(response => {
           console.log(response.data);
           this.attachPaymentMethodTo(setupIntent.payment_method, response.data.id);
@@ -67,7 +63,7 @@ export default {
         customerId,
       }
 
-      axios.post(this.$parent.host + '/payment-method/attach', data)
+      axios.post(this.host + '/payment-method/attach', data)
         .then(response => {
           console.log(response.data);
 
@@ -77,12 +73,12 @@ export default {
           }
 
           this.$emit('saved', data);
-          this.$parent.endWait();
+          this.endWait();
         })
         .catch(error => {
           console.log(error.response);
           this.$emit('error', error.response.data.message);
-          this.$parent.endWait();
+          this.endWait();
         });
     },
   }
