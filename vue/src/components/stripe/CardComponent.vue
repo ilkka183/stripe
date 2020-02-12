@@ -2,7 +2,7 @@
 export default {
   computed: {
     group() {
-      return this.parentByName('StripeCardGroup');
+      return this.parentByName('CardGroup');
     }
   },
   methods: {

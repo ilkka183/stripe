@@ -8,7 +8,7 @@
 import axios from 'axios';
 
 export default {
-  name: 'StripeCardGroup',
+  name: 'CardGroup',
   props: {
     host: { type: String, required: true }
   },
@@ -25,7 +25,6 @@ export default {
 
     axios.get(this.host + '/setup')
       .then(response => {
-        this.endWait();
         console.log(response.data);
         this.clientSecret = response.data.setupIntent.client_secret;
 
@@ -34,7 +33,7 @@ export default {
         /* eslint-enable */
         const elements = this.stripe.elements();
 
-        var style = {
+        const style = {
           base: {
             color: '#32325d',
             fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
@@ -54,6 +53,8 @@ export default {
           element.element = elements.create(element.component.elementName, { style });
           element.element.mount(element.component.$refs.element);
         }
+        
+        this.endWait();
       });
   },
   methods: {

@@ -1,8 +1,8 @@
 <script>
-import StripeCardComponent from './StripeCardComponent';
+import CardComponent from './CardComponent';
 
 export default {
-  extends: StripeCardComponent,
+  extends: CardComponent,
   mounted() {
     this.group.elementMounted(this);
   }

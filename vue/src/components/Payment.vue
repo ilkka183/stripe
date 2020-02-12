@@ -7,18 +7,18 @@
         <tr><td>Email:</td><td><input type="text" size="60" v-model="email"></td></tr>
         <tr><td>Phone:</td><td><input type="text" size="20" v-model="phone"></td></tr>
       </table>
-      <StripeCardGroup :host="host">
-        <div v-if="single">
-          <StripeCardElement />
+      <CardGroup :host="host">
+        <div v-if="singleElement">
+          <CardElement />
         </div>
         <div v-else>
-          <StripeCardNumberElement />
-          <StripeCardExpiryElement />
-          <StripeCardCvcElement />
+          <CardNumberElement />
+          <CardExpiryElement />
+          <CardCvcElement />
         </div>
-        <StripeCardSaveButton :name="name" :email="email" :phone="phone" @saved="cardSaved" @error="cardError">Save Card</StripeCardSaveButton>
-        <div class="error">{{ cardErrorMessage }}</div>
-      </StripeCardGroup>
+        <CardSaveButton :name="name" :email="email" :phone="phone" @saved="cardSaved" @error="cardSaveError">Save Card</CardSaveButton>
+        <div class="error">{{ cardSaveErrorMessage }}</div>
+      </CardGroup>
     </div>
     <div v-if="customerId && paymentMethodId" class="group">
       <table>
@@ -64,33 +64,33 @@
 
 <script>
 import axios from 'axios';
-import StripeCardGroup from './StripeCardGroup'
-import StripeCardElement from './StripeCardElement'
-import StripeCardNumberElement from './StripeCardNumberElement'
-import StripeCardExpiryElement from './StripeCardExpiryElement'
-import StripeCardCvcElement from './StripeCardCvcElement'
-import StripeCardSaveButton from './StripeCardSaveButton'
+import CardGroup from './stripe/CardGroup'
+import CardElement from './stripe/CardElement'
+import CardNumberElement from './stripe/CardNumberElement'
+import CardExpiryElement from './stripe/CardExpiryElement'
+import CardCvcElement from './stripe/CardCvcElement'
+import CardSaveButton from './stripe/CardSaveButton'
 
 export default {
   components: {
-    StripeCardGroup,
-    StripeCardElement,
-    StripeCardNumberElement,
-    StripeCardExpiryElement,
-    StripeCardCvcElement,
-    StripeCardSaveButton
+    CardGroup,
+    CardElement,
+    CardNumberElement,
+    CardExpiryElement,
+    CardCvcElement,
+    CardSaveButton
   },
   data() {
     return {
       host: 'http://localhost:3000/stripe',
 //      host: 'http://localhost:49363/wp-json/juro/v1/stripe',
-      name: 'Ilkka Salmenius',
       email: 'ilkka.salmennius@gmail.com',
+      name: 'Ilkka Salmenius',
       phone: '050 61698',
-      single: true,
+      singleElement: true,
       customerId: null,
       paymentMethodId: null,
-      cardErrorMessage: null,
+      cardSaveErrorMessage: null,
       paymentId: null,
       paymentSuccessMessage: null,
       paymentErrorMessage: null,
@@ -108,8 +108,8 @@ export default {
       this.customerId = data.customerId;
       this.paymentMethodId = data.paymentMethodId;
     },
-    cardError(errorMessage) {
-      this.cardErrorMessage = errorMessage;
+    cardSaveError(errorMessage) {
+      this.cardSaveErrorMessage = errorMessage;
     },
     createPayment() {
       this.beginWait();

@@ -4,10 +4,10 @@
 
 <script>
 import axios from 'axios';
-import StripeCardButton from './StripeCardButton';
+import CardButton from './CardButton';
 
 export default {
-  extends: StripeCardButton,
+  extends: CardButton,
   props: {
     name: { type: String },
     email: { type: String },

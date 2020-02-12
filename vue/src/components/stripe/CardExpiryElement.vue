@@ -3,10 +3,10 @@
 </template>
 
 <script>
-import StripeCardBaseElement from './StripeCardBaseElement';
+import CardBaseElement from './CardBaseElement';
 
 export default {
-  extends: StripeCardBaseElement,
+  extends: CardBaseElement,
   computed: {
     elementName() {
       return 'cardExpiry';
