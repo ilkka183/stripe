@@ -114,7 +114,7 @@ app.post('/stripe/payment-method/attach', async (req, res) => {
 // Payment
 //
 
-app.post('/stripe/payment/create-by-first-customer-method/:customerId', async (req, res) => {
+app.post('/stripe/payment/create/:customerId', async (req, res) => {
   const customer = req.params.customerId;
 
   const paymentMethods = await stripe.paymentMethods.list({
@@ -153,10 +153,12 @@ app.post('/stripe/payment/create-by-first-customer-method/:customerId', async (r
         console.log('PI retrieved: ', paymentIntentRetrieved.id);    
       }
     }
+  } else {
+    res.status(400).send({ code: 0, message: 'No payment methods attached to customer ' + customer });
   }
 });
 
-app.post('/stripe/payment/capture/:id', async (req, res) => {
+app.put('/stripe/payment/capture/:id', async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -170,7 +172,7 @@ app.post('/stripe/payment/capture/:id', async (req, res) => {
   }
 });
 
-app.post('/stripe/payment/cancel/:id', async (req, res) => {
+app.put('/stripe/payment/cancel/:id', async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -185,5 +187,5 @@ app.post('/stripe/payment/cancel/:id', async (req, res) => {
 });
 
 
-const port = 3000;
+const port = 4000;
 app.listen(port, () => console.log(`Stripe REST server listening on port ${port}...`));

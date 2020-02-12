@@ -1,19 +1,20 @@
 @hostname = localhost
 @port = 3000
 @host = {{hostname}}:{{port}}
-@path = http://{{host}}/
+@path = http://{{host}}/stripe/
 
-GET {{path}}card-wallet
+GET {{path}}setup
 ###
-POST {{path}}create-customer
+POST {{path}}customer/create
 content-type: application/json
 
 {
-  "name": "Ilkka Salmenius",
   "email": "ilkka.salmenius@gmail.com",
-  "phone": "050 61698",
-  "number": "4242 4242 4242 4242"
+  "name": "Ilkka Salmenius",
+  "phone": "050 61698"
 }
+###
+DELETE {{path}}customer/delete/cus_GijwasXiJdNazm
 ###
 POST {{path}}create-payment-method
 content-type: application/json

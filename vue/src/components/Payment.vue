@@ -86,8 +86,8 @@ export default {
   },
   data() {
     return {
-      restPath: 'http://localhost:3000/stripe',
-//      restPath: 'http://localhost:49363/wp-json/juro/v1/stripe',
+//      restPath: 'http://localhost:4000/stripe',
+      restPath: 'http://localhost:59690/wp-json/juro/v1/stripe',
       email: 'ilkka.salmennius@gmail.com',
       name: 'Ilkka Salmenius',
       phone: '050 61698',
@@ -125,7 +125,7 @@ export default {
         capture_method: this.captureMethod
       }
 
-      axios.post(this.restPath + '/payment/create-by-first-customer-method/' + this.customerId, data)
+      axios.post(this.restPath + '/payment/create/' + this.customerId, data)
         .then(response => {
           this.paymentId = response.data.id;
           this.captureNeeded = this.captureMethod == 'manual';
@@ -136,7 +136,7 @@ export default {
     capturePayment() {
       this.beginWait();
 
-      axios.post(this.restPath + '/payment/capture/' + this.paymentId)
+      axios.put(this.restPath + '/payment/capture/' + this.paymentId)
         .then(response => {
           this.captureNeeded = false;
           this.endOk(response);
@@ -146,7 +146,7 @@ export default {
     cancelPayment() {
       this.beginWait();
 
-      axios.post(this.restPath + '/payment/cancel/' + this.paymentId)
+      axios.put(this.restPath + '/payment/cancel/' + this.paymentId)
         .then(response => {
           this.captureNeeded = false;
           this.endOk(response);
