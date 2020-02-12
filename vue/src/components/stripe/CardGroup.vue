@@ -10,7 +10,7 @@ import axios from 'axios';
 export default {
   name: 'CardGroup',
   props: {
-    host: { type: String, required: true }
+    restPath: { type: String, required: true }
   },
   data() {
     return {
@@ -23,7 +23,7 @@ export default {
   mounted() {
     this.beginWait();
 
-    axios.get(this.host + '/setup')
+    axios.get(this.restPath + '/setup')
       .then(response => {
         console.log(response.data);
         this.clientSecret = response.data.setupIntent.client_secret;

@@ -3,6 +3,11 @@ import CardComponent from './CardComponent';
 
 export default {
   extends: CardComponent,
+  props: {
+    name: { type: String },
+    email: { type: String },
+    phone: { type: String }
+  },
   computed: {
     cardElement() {
       if (this.group.elements.length > 0)
@@ -10,8 +15,8 @@ export default {
 
       return null;
     },
-    host() {
-      return this.group ? this.group.host : null;
+    restPath() {
+      return this.group ? this.group.restPath : null;
     },
     stripe() {
       return this.group ? this.group.stripe : null;

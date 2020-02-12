@@ -2,27 +2,26 @@
   <div>
     <div class="group">
       <table>
-        <tr><td>Customer:</td><td><span class="id">{{ customerId }}</span></td></tr>
+        <tr><td>Customer ID:</td><td><span class="id">{{ customerId }}</span></td></tr>
         <tr><td>Name:</td><td><input type="text" size="40" v-model="name"></td></tr>
         <tr><td>Email:</td><td><input type="text" size="60" v-model="email"></td></tr>
         <tr><td>Phone:</td><td><input type="text" size="20" v-model="phone"></td></tr>
       </table>
-      <CardGroup :host="host">
-        <div v-if="singleElement">
-          <CardElement />
-        </div>
-        <div v-else>
+      <CardGroup :restPath="restPath">
+        <div v-if="separateElements">
           <CardNumberElement />
           <CardExpiryElement />
           <CardCvcElement />
         </div>
+        <div v-else>
+          <CardElement />
+        </div>
         <CardSaveButton :name="name" :email="email" :phone="phone" @saved="cardSaved" @error="cardSaveError">Save Card</CardSaveButton>
-        <div class="error">{{ cardSaveErrorMessage }}</div>
       </CardGroup>
     </div>
     <div v-if="customerId && paymentMethodId" class="group">
       <table>
-        <tr><td>Payment Method:</td><td><span class="id">{{ paymentMethodId }}</span></td></tr>
+        <tr><td>Payment Method ID:</td><td><span class="id">{{ paymentMethodId }}</span></td></tr>
         <tr><td>Amount:</td><td><input type="number" size="12" v-model="amount"></td></tr>
         <tr>
           <td>Currency:</td>
@@ -54,10 +53,15 @@
           <button class="button" :disabled="processing" @click="cancelPayment">Cancel Payment</button>
         </template>
       </div>
-      <div vlass="messages">
-        <div class="success">{{ paymentSuccessMessage }}</div>
-        <div class="error">{{ paymentErrorMessage }}</div>
-      </div>
+    </div>
+    <div v-if="paymentId" class="group">
+      <table>
+        <tr><td>Payment ID:</td><td><span class="id">{{ paymentId }}</span></td></tr>
+      </table>
+    </div>
+    <div class="group">
+      <div class="error">{{ errorMessage }}</div>
+      <div class="ok">{{ okMessage }}</div>
     </div>
   </div>
 </template>
@@ -82,18 +86,17 @@ export default {
   },
   data() {
     return {
-      host: 'http://localhost:3000/stripe',
-//      host: 'http://localhost:49363/wp-json/juro/v1/stripe',
+      restPath: 'http://localhost:3000/stripe',
+//      restPath: 'http://localhost:49363/wp-json/juro/v1/stripe',
       email: 'ilkka.salmennius@gmail.com',
       name: 'Ilkka Salmenius',
       phone: '050 61698',
-      singleElement: true,
+      separateElements: false,
       customerId: null,
       paymentMethodId: null,
-      cardSaveErrorMessage: null,
       paymentId: null,
-      paymentSuccessMessage: null,
-      paymentErrorMessage: null,
+      okMessage: null,
+      errorMessage: null,
       amount: 195,
       currency: 'eur',
       captureMethod: 'automatic',
@@ -109,10 +112,11 @@ export default {
       this.paymentMethodId = data.paymentMethodId;
     },
     cardSaveError(errorMessage) {
-      this.cardSaveErrorMessage = errorMessage;
+      this.errorMessage = errorMessage;
     },
     createPayment() {
       this.beginWait();
+      this.paymentId = null;
 
       const data = {
         customerId: this.customerId,
@@ -121,49 +125,51 @@ export default {
         capture_method: this.captureMethod
       }
 
-      axios.post(this.host + '/payment/create-by-first-customer-method/' + this.customerId, data)
+      axios.post(this.restPath + '/payment/create-by-first-customer-method/' + this.customerId, data)
         .then(response => {
-          console.log(response.data);
           this.paymentId = response.data.id;
           this.captureNeeded = this.captureMethod == 'manual';
-          this.endWait();
+          this.endOk(response);
         })
-        .catch(error => this.paymentError(error));
+        .catch(error => this.endError(error));
     },
     capturePayment() {
       this.beginWait();
 
-      axios.post(this.host + '/payment/capture/' + this.paymentId)
+      axios.post(this.restPath + '/payment/capture/' + this.paymentId)
         .then(response => {
-          console.log(response.data);
           this.captureNeeded = false;
-          this.endWait();
+          this.endOk(response);
         })
-        .catch(error => this.paymentError(error));
+        .catch(error => this.endError(error));
     },
     cancelPayment() {
       this.beginWait();
 
-      axios.post(this.host + '/payment/cancel/' + this.paymentId)
+      axios.post(this.restPath + '/payment/cancel/' + this.paymentId)
         .then(response => {
-          console.log(response.data);
           this.captureNeeded = false;
-          this.endWait();
+          this.endOk(response);
         })
-        .catch(error => this.paymentError(error));
+        .catch(error => this.endError(error));
     },
     beginWait() {
-      this.paymentSuccessMessage = '';
-      this.paymentErrorMessage = '';
+      this.okMessage = null;
+      this.errorMessage = null;
       this.processing = true;
     },
     endWait() {
-      this.paymentSuccessMessage = 'Succeeded';
       this.processing = false;
     },
-    paymentError(error) {
-      this.paymentErrorMessage = error.response.data.message;
-      this.processing = false;
+    endOk(response) {
+      console.log(response.data);
+
+      this.okMessage = 'OK';
+      this.endWait();
+    },
+    endError(error) {
+      this.errorMessage = error.response.data.message;
+      this.endWait();
     },
   }
 }
@@ -183,7 +189,7 @@ export default {
   color: green;
 }
 
-.success {
+.ok {
   margin-top: 10px;
   color: green;
 }

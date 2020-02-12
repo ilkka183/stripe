@@ -8,11 +8,6 @@ import CardButton from './CardButton';
 
 export default {
   extends: CardButton,
-  props: {
-    name: { type: String },
-    email: { type: String },
-    phone: { type: String }
-  },
   methods: {
     saveCard() {
       this.beginWait();
@@ -47,7 +42,7 @@ export default {
         phone: this.phone
       }
 
-      axios.post(this.host + '/customer/create', data)
+      axios.post(this.restPath + '/customer/create', data)
         .then(response => {
           console.log(response.data);
           this.attachPaymentMethodTo(setupIntent.payment_method, response.data.id);
@@ -63,7 +58,7 @@ export default {
         customerId,
       }
 
-      axios.post(this.host + '/payment-method/attach', data)
+      axios.post(this.restPath + '/payment-method/attach', data)
         .then(response => {
           console.log(response.data);
 
